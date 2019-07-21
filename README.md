@@ -1,2 +1,2 @@
 # UrlShortener
-This is a url shortener
+This is a url shortener - stil under constructions
