@@ -13,6 +13,13 @@ type Config struct {
 	Options struct {
 		Prefix string "json:'prefix'"
 	} "json:'options'"
+	MySql struct {
+		Host     string "json:'host'"
+		Port     string "json:'port'"
+		User     string "json:'user'"
+		Password string "json:'password'"
+		DB       string "json:'db'"
+	} "json:'Mysql'"
 }
 
 func ReadConfig(path string) (*Config, error) {

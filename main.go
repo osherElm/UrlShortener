@@ -3,6 +3,7 @@ package main
 import (
 	"UrlShortener/config"
 	"UrlShortener/handler"
+	"UrlShortener/storage/mysql"
 	"flag"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -21,6 +22,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db, err := mysql.Initialize(cfg.MySql.User, cfg.MySql.Password, cfg.MySql.DB)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
 
 	go func() {
 		if err := fasthttp.ListenAndServe(":8080", handler.Initialize(cfg.Options.Prefix)); err != http.ErrServerClosed {
