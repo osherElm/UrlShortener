@@ -1,13 +1,19 @@
 package handler
 
-import "net/http"
+import (
+	"github.com/valyala/fasthttp"
+)
 
-func Initialize(pr string) *http.ServeMux {
+func Initialize(pr string) func(*fasthttp.RequestCtx) {
 	h := handler{prefix: pr}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.redirect)
-
+	mux := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/":
+			h.redirect(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
 	return mux
 }
 
@@ -15,12 +21,12 @@ type handler struct {
 	prefix string
 }
 
-func (handler) redirect(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+func (handler)  redirect(ctx *fasthttp.RequestCtx)  {
+	if !ctx.IsGet() {
+		 ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
 		return
 	}
 	//code:= r.URL.Path[len("/"):]
 	//Add the pull from db then redirect to correct url
-	http.Redirect(w, r, "http://www.google.com", 301)
+	ctx.Redirect("http://www.google.com", 301)
 }
