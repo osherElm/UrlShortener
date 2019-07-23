@@ -1,7 +1,7 @@
 package storage
 
-//Add service interface
-type Storage interface {
+//Service storage interface
+type Service interface {
 	Save(string) (string, error)
 	Close() error
 }

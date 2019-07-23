@@ -4,6 +4,7 @@ import (
 	"UrlShortener/storage"
 	"database/sql"
 	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -11,6 +12,7 @@ type mysql struct {
 	db *sql.DB
 }
 
+//Initialize receives the parameters required to setup a mysql db
 func Initialize(user string, password string, dbname string) (storage.Storage, error) {
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/%s", user, password, dbname))
 	if err != nil {
@@ -20,7 +22,6 @@ func Initialize(user string, password string, dbname string) (storage.Storage, e
 
 	err = db.Ping()
 	if err != nil {
-		// proper error handling instead of panic in your app
 		return nil, err
 	}
 
@@ -29,6 +30,17 @@ func Initialize(user string, password string, dbname string) (storage.Storage, e
 }
 
 func (m mysql) Save(url string) (string, error) {
+
+	stmtIns, err := m.db.Prepare(`INSERT INTO urls (url, count, visited) VALUES(?,?,?)`)
+	if err != nil {
+		return "", err
+	}
+	_, err = stmtIns.Exec(url, 0, false)
+	if err != nil {
+		return "", fmt.Errorf("mysql: could not execute statement: %v", err)
+	}
+
+	defer stmtIns.Close()
 	return url, nil
 }
 
