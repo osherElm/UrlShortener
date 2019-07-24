@@ -5,12 +5,13 @@ import (
 	"UrlShortener/handler"
 	"UrlShortener/storage/mysql"
 	"flag"
-	"github.com/valyala/fasthttp"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := mysql.Initialize(cfg.MySql.User, cfg.MySql.Password, cfg.MySql.DB)
+	db, err := mysql.Initialize(cfg.MySQL.User, cfg.MySQL.Password, cfg.MySQL.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +32,7 @@ func main() {
 	defer db.Close()
 
 	go func() {
-		if err := fasthttp.ListenAndServe(":8080", handler.Initialize(cfg.Options.Prefix)); err != http.ErrServerClosed {
+		if err := fasthttp.ListenAndServe(":8080", handler.Initialize(cfg.Options.Prefix, &db)); err != http.ErrServerClosed {
 			log.Fatalf("%v", err)
 		} else {
 			log.Println("Server closed!")
