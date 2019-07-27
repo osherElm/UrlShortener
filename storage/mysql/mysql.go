@@ -18,7 +18,6 @@ func Initialize(user string, password string, dbname string) (storage.Service, e
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
@@ -30,18 +29,17 @@ func Initialize(user string, password string, dbname string) (storage.Service, e
 }
 
 func (m *mysql) Save(url string) (string, error) {
-
 	stmtIns, err := m.db.Prepare(`INSERT INTO urls (url, count, visited) VALUES(?,?,?)`)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("inserting url : %s to db", url)
 	_, err = stmtIns.Exec(url, 0, false)
 	if err != nil {
 		return "", fmt.Errorf("mysql: could not execute statement: %v", err)
 	}
-
 	defer stmtIns.Close()
+
+	//return base62 encode of ID instead of URL and done with encoding.
 	return url, nil
 }
 

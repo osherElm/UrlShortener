@@ -4,7 +4,6 @@ import (
 	"UrlShortener/storage"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -21,7 +20,12 @@ func Initialize(pr string, storage *storage.Service) func(*fasthttp.RequestCtx) 
 		case "/":
 			h.redirect(ctx)
 		case "/save/":
-			h.saveURL(ctx)
+			url, _, err := h.saveURL(ctx)
+			if err != nil {
+				ctx.Error("not found", fasthttp.StatusBadRequest)
+			}
+			urlb, err := json.Marshal(url)
+			ctx.Response.SetBody(urlb)
 		default:
 			fmt.Println(string(ctx.Path()))
 			ctx.Error("not found", fasthttp.StatusNotFound)
@@ -46,26 +50,17 @@ func (h *handler) redirect(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *handler) saveURL(ctx *fasthttp.RequestCtx) (interface{}, int, error) {
-	log.Println("saving to db")
 	if !ctx.IsPost() {
 		ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
 		return nil, fasthttp.StatusBadRequest, fmt.Errorf("method %s not allowed", ctx.Method())
 	}
-	log.Println("saving to db 2")
 	var input struct {
 		URL string `json:"url"`
 	}
 
 	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
-		log.Println(err)
 		return nil, http.StatusBadRequest, fmt.Errorf("Unable to decode JSON request body: %v", err)
 	}
-	//	log.Println(json.NewDecoder(string((ctx.PostBody()))
-	// if err := json.NewDecoder(r).Decode(&input); err != nil {
-	// 	log.Println(err)
-	// 	return nil, http.StatusBadRequest, fmt.Errorf("Unable to decode JSON request body: %v", err)
-	// }
-	log.Println("inserting ur   l :  to db", input.URL)
 
 	url := strings.TrimSpace(input.URL)
 	if url == "" {
@@ -75,7 +70,6 @@ func (h *handler) saveURL(ctx *fasthttp.RequestCtx) (interface{}, int, error) {
 	if !strings.Contains(url, "http") {
 		url = "http://" + url
 	}
-	log.Println("inserting url : to db  ", url)
 	c, err := h.db.Save(url)
 	if err != nil {
 		return nil, http.StatusInternalServerError, fmt.Errorf("Could not store in database: %v", err)
